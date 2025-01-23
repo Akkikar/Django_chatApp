@@ -1,0 +1,65 @@
+/* Main container for the users list */
+.users-list-container {
+  background-color: #f7f7f7;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 300px;
+  margin: 0 auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Title styling */
+.users-list-title {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 15px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* List styling */
+.users-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.user-item {
+  padding: 12px;
+  margin: 8px 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out, background-color 0.3s;
+}
+
+/* Hover effect for each list item */
+.user-item:hover {
+  background-color: #e4f7f2;
+  transform: scale(1.05);
+  color: #007bff;
+}
+
+/* Loading spinner */
+.loading {
+  font-size: 18px;
+  text-align: center;
+  color: #555;
+}
+
+/* Mobile responsive design */
+@media (max-width: 600px) {
+  .users-list-container {
+    max-width: 100%;
+    padding: 15px;
+  }
+
+  .users-list-title {
+    font-size: 20px;
+  }
+
+  .user-item {
+    font-size: 16px;
+  }
+}

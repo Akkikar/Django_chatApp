@@ -1,83 +1,148 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import UserList from './UserList';
-import './Chat.css';  // Importing the CSS file for Chat styling
+import axios from 'axios';
+import {jwtDecode} from 'jwt-decode';
 
-const Chat = () => {
-  const { roomName } = useParams();
-  const navigate = useNavigate();
+import './Chat.css';
+import UsersList from './UsersList';
+
+const Chat = ({ token }) => {
+  const [receiverUsername, setReceiverUsername] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [newMessage, setNewMessage] = useState('');
   const [socket, setSocket] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
+  const [username, setUsername] = useState(null);
+  const [userId, setUserId] = useState(null);
 
-  const isUserLoggedIn = true;
+ 
+  useEffect(() => {
+    const decodedToken = jwtDecode(token);
+    const userId = decodedToken.user_id; // Using the user_id from the token
+    setUserId(userId);
+    
+    // Fetch the username from the backend using the user ID
+    const fetchUsername = async () => {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8000/get-username/${userId}/`, { // Make an API request to get username
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUsername(response.data.username); // Assuming the response has { username: '...' }
+      } catch (error) {
+        console.error('Error fetching username:', error);
+      }
+    };
+
+    if (userId) {
+      fetchUsername();
+    }
+  }, [token]);
+
 
   useEffect(() => {
-    if (!isUserLoggedIn) {
-      navigate('/login');
-    } else {
-      const userId = localStorage.getItem('user_id');
-      setCurrentUserId(userId);
-
-      const ws = new WebSocket(`ws://127.0.0.1:8000/ws/chat/`);
-      ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        setMessages((prevMessages) => [...prevMessages, data.message]);
+    if (receiverUsername) {
+      const socketInstance = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${receiverUsername}/`);
+  
+      socketInstance.onopen = () => {
+        console.log("WebSocket connected");
       };
-      setSocket(ws);
+  
+      socketInstance.onmessage = (event) => {
+        const messageData = JSON.parse(event.data);
+        setMessages((prevMessages) => [...prevMessages, messageData]);
+      };
+  
+      socketInstance.onerror = (error) => {
+        console.error("WebSocket Error:", error);
+      };
+  
+      socketInstance.onclose = () => {
+        console.log("WebSocket closed");
+      };
+  
+      setSocket(socketInstance);
+  
       return () => {
-        ws.close();
+        socketInstance.close();
       };
     }
-  }, [roomName, isUserLoggedIn, navigate]);
+  }, [receiverUsername]);
+  
+  
 
-  const sendMessage = () => {
-    if (message.trim() === '') return;
-    if (socket) {
-      socket.send(JSON.stringify({ message }));
-      setMessage('');
+  // Fetch previous messages
+  useEffect(() => {
+    if (receiverUsername) {
+      const fetchMessages = async () => {
+        try {
+          const response = await axios.get(`http://127.0.0.1:8000/chat/${receiverUsername}/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setMessages(response.data);
+        } catch (error) {
+          console.error('Error fetching messages:', error);
+        }
+      };
+
+      fetchMessages();
+    }
+  }, [receiverUsername, token]);
+
+  const decodedToken = jwtDecode(token);
+  const currentUserId = decodedToken.user_id;
+
+  // Handle sending a new message
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (socket && newMessage.trim()) {
+      const messageData = {
+        content: newMessage,
+        sender: { username: username, id: currentUserId }, // Include correct sender details
+      };
+      socket.send(JSON.stringify(messageData));
+      setMessages((prevMessages) => [...prevMessages, messageData]);
+      setNewMessage('');
     }
   };
-
-  const handleSelectUser = (user) => {
-    setSelectedUser(user); // Set the selected user
-  };
+  
 
   return (
     <div className="chat-container">
-      {!currentUserId && <UserList onSelectUser={handleSelectUser} currentUserId={currentUserId} />}
-      <div className="chat-box">
-        {selectedUser && (
-          <div className="chat-header">
-            <div className="chat-user-avatar"></div>
-            <h4 className="chat-user-name">Chat with {selectedUser.username}</h4>
-          </div>
+      <div className="left-pane">
+        <UsersList token={token} onSelectUser={setReceiverUsername} />
+      </div>
+      <div className="right-pane">
+        {receiverUsername ? (
+          <>
+            <h3>Chat with {receiverUsername}</h3>
+            <div className="message-list">
+                {messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`message ${
+                      message.sender?.username === 'You' ? 'sent' : 'received'
+                    }`}
+                  >
+                    <strong>{message.sender?.username || 'Unknown'}:</strong> {message.content || message.message}
+                  </div>
+                ))}
+             </div>
+
+
+            <form onSubmit={sendMessage} className="message-form">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type a message"
+                className="message-input"
+              />
+              <button type="submit" className="send-button">
+                Send
+              </button>
+            </form>
+          </>
+        ) : (
+          <div>Select a user to start chatting</div>
         )}
-        <div className="messages">
-          {messages.length === 0 ? (
-            <p>No messages yet</p>
-          ) : (
-            messages.map((msg, index) => (
-              <div key={index} className="message">
-                <div className="message-bubble">{msg}</div>
-              </div>
-            ))
-          )}
-        </div>
-        <div className="message-input">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="input-box"
-          />
-          <button onClick={sendMessage} className="send-button">
-            Send
-          </button>
-        </div>
       </div>
     </div>
   );
