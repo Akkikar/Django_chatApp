@@ -1,65 +1,69 @@
-/* Main container for the users list */
+/* General Container Styling */
 .users-list-container {
-  background-color: #f7f7f7;
-  border-radius: 8px;
   padding: 20px;
-  max-width: 300px;
-  margin: 0 auto;
+  background-color: #f8f9fa;
+  border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  margin: 0 auto;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
-/* Title styling */
+/* Title Styling */
 .users-list-title {
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 15px;
+  font-size: 1.5em;
   font-weight: bold;
+  color: #343a40;
+  margin-bottom: 20px;
   text-align: center;
 }
 
-/* List styling */
+/* User List Styling */
 .users-list {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 .user-item {
-  padding: 12px;
-  margin: 8px 0;
   background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 18px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s ease-in-out, background-color 0.3s;
+  font-size: 1.1em;
+  font-weight: 500;
+  transition: all 0.3s ease-in-out;
 }
 
-/* Hover effect for each list item */
+/* Hover Effects for User Items */
 .user-item:hover {
-  background-color: #e4f7f2;
-  transform: scale(1.05);
-  color: #007bff;
+  background-color: #007bff;
+  color: #fff;
+  transform: translateX(5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Loading spinner */
+/* Loading Indicator */
 .loading {
-  font-size: 18px;
   text-align: center;
-  color: #555;
+  font-size: 1.2em;
+  color: #6c757d;
+  font-weight: 600;
+  margin-top: 50px;
 }
 
-/* Mobile responsive design */
-@media (max-width: 600px) {
-  .users-list-container {
-    max-width: 100%;
-    padding: 15px;
-  }
+/* Make sure the list doesn't overflow */
+.users-list-container::-webkit-scrollbar {
+  width: 8px;
+}
 
-  .users-list-title {
-    font-size: 20px;
-  }
+.users-list-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
 
-  .user-item {
-    font-size: 16px;
-  }
+.users-list-container::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.1);
 }
